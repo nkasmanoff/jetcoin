@@ -1,0 +1,8 @@
+**.ckpt
+
+**.git
+**__pycache__
+
+**wandb/
+
+**uncategorized/
