@@ -7,8 +7,7 @@ sudo docker build -t nsk367/jetcoin .
 
 
 
-sudo docker run --runtime nvidia -it --rm --network host \
-    --volume ~/jetcoin:/jetcoin nsk367/jetcoin
+sudo docker run --runtime nvidia -it --rm --network host --volume ~/jetcoin:/jetcoin nsk367/jetcoin
 
 
 and once inside can train, test, and predict.
