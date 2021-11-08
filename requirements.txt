@@ -1,0 +1,8 @@
+torch
+pycoingecko
+wandb
+pytorch-lightning
+datetime
+numpy
+pandas
+matplotlib
