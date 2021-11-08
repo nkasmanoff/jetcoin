@@ -24,7 +24,7 @@ def initialize_weight(x):
 
 def create_self_mask(target_len, device=None):
     # Prevent leftward information flow in self-attention (of decoder)
-    ones = torch.ones(target_len, target_len, dtype=torch.uint8,
+    ones = torch.ones(target_len, target_len, dtype=torch.bool,
                       device=device)
     t_self_mask = torch.triu(ones, diagonal=1).unsqueeze(0)
 
@@ -213,7 +213,7 @@ class Transformer(nn.Module):
 
     def forward(self, x):
 
-        self_mask = create_self_mask(self.window_size)
+        self_mask = create_self_mask(self.window_size).cuda()
         x = self.decode(x, self_mask)
         x = self.output_mlp(x[:,-1,:])
         return x
@@ -223,7 +223,7 @@ class Transformer(nn.Module):
 
 
 
-        x = torch.stack([x[i,:] * torch.eye(x.shape[1]) for i in range(x.shape[0])]) # my way of making hidden size for this "embedding"
+        x = torch.stack([x[i,:] * torch.eye(x.shape[1]).cuda() for i in range(x.shape[0])]) # my way of making hidden size for this "embedding"
         x *= self.emb_scale
         x += self.get_position_encoding(x)
 

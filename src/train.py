@@ -18,7 +18,8 @@ from pytorch_lightning.loggers import WandbLogger
 from pytorch_lightning.callbacks import LearningRateMonitor
 import torch
 import torch.nn.functional as F
-
+import warnings
+warnings.filterwarnings("ignore")
 
 class CryptoTrainer(pl.LightningModule):
     """
