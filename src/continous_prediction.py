@@ -13,7 +13,7 @@ from datetime import datetime
 import numpy as np
 import time
 
-model_path = "/Users/noahkasmanoff/Desktop/F21/jetcoin/src/jetcoin-src/u6ml995c/checkpoints/epoch=18-step=968.ckpt"
+model_path = # TODO # "/Users/noahkasmanoff/Desktop/F21/jetcoin/src/jetcoin-src/u6ml995c/checkpoints/epoch=18-step=968.ckpt"
 
 def predict(model_path):
     """
