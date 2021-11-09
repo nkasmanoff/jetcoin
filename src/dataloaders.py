@@ -25,9 +25,10 @@ class CryptoDataset(Dataset):
 
 
     """
-    def __init__(self, coin_file,label_to_load = ['pct_change'],scale = True):
+    def __init__(self, coin_file,label_to_load = ['pct_change'],today = False):
         self.coin_file = coin_file
         self.label_to_load = label_to_load
+        self.today = today
 
     def __len__(self):
         return len(self.coin_file)
@@ -44,7 +45,8 @@ class CryptoDataset(Dataset):
             y.append(self.coin_file[idx][label])
 
 
-        # TODO - return date as well? Do I think I'll even care?
+        if self.today: #when using today loader, it returns all relevant info.
+            return X, X_norm, self.coin_file[idx]['date'] ,torch.Tensor(y)
 
         return X_norm, torch.Tensor(y)
 
@@ -68,7 +70,7 @@ def create_dataloaders(prior_years,prior_days,crypto,values,buy_thresh,window,ba
     train_dataset = CryptoDataset(coin_train,labels_to_load)
     valid_dataset = CryptoDataset(coin_valid,labels_to_load)
     test_dataset = CryptoDataset(coin_test,labels_to_load)
-    today_dataset = CryptoDataset(coin_today,labels_to_load)
+    today_dataset = CryptoDataset(coin_today,labels_to_load,today=True)
 
 
     train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True,num_workers = 4)

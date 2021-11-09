@@ -34,12 +34,12 @@ if torch.cuda.is_available():
 
 trader.eval();
 with torch.no_grad():
-    for price, pct_change in today_loader:
+    for price, price_norm, date, pct_change in today_loader:
         if torch.cuda.is_available():
-            price = price.cuda()# if available!
+            price_norm = price_norm.cuda()# if available!
 
 #        print(trader.forward(price).item(),'||', pct_change.item())
-        y_pred = trader.forward(price).item()
+        y_pred = trader.forward(price_norm).item()
 
 
 print("Predicted % change for most recent datapoint: ", 100*y_pred)
@@ -53,8 +53,10 @@ today_df = pd.DataFrame([])
 today_df['timestamp'] = [today]
 today_df['date'] = [datetime.fromtimestamp(today)] if trader.hparams.args.prior_years == 0 else [datetime.fromtimestamp(today // 1000)]
 today_df['predicted_pct_change'] = [y_pred]
+today_df['predicted_price'] = price.mean().item()*y_pred + price.mean().item()  # this uses the mean and std.. which I no longer have.
 today_df['model'] = [model_path] # more!
 today_df['resolution'] = [approx_resolution]
+today_df['check_at'] = [datetime.fromtimestamp(today+approx_resolution)] if trader.hparams.args.prior_years == 0 else [datetime.fromtimestamp(today // 1000)]
 
 if os.path.exists('../bin/predicted_changes.csv'):
     online_df = pd.read_csv('../bin/predicted_changes.csv')
