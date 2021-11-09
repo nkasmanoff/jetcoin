@@ -6,26 +6,60 @@ Return and save a prediction for what the expected change in % is today.
 from train import CryptoTrainer
 import torch
 from dataloaders import create_dataloaders
+import pandas as pd
+import os
+from pycoingecko import CoinGeckoAPI
+from datetime import datetime
 
 
-model_path = "/home/noah/jetcoin/src/jetcoin-src/g40wc4nz/checkpoints/epoch=45-step=1563.ckpt"
+model_path = "/Users/noahkasmanoff/Desktop/F21/jetcoin/src/jetcoin-src/u6ml995c/checkpoints/epoch=18-step=968.ckpt"
+
 
 
 trader = CryptoTrainer.load_from_checkpoint(model_path)
 
 
-train_loader, valid_loader, test_loader, today_loader = create_dataloaders(crypto='bitcoin',values='usd',batch_size=1,labels_to_load=['pct_change'],
-                                                            prior_years = 5, window = 28, buy_thresh=5)
+# TODO -save all these args to model, add to trader. for loading loaders
+train_loader, valid_loader, test_loader, today_loader, approx_resolution = create_dataloaders(crypto=trader.hparams.args.crypto,
+                                                                                values=trader.hparams.args.values,
+                                                                                batch_size=1,
+                                                                                labels_to_load=trader.hparams.args.labels_to_load.split(','),
+                                                                                prior_years = trader.hparams.args.prior_years,
+                                                                                prior_days = trader.hparams.args.prior_days,
+                                                                                window = trader.hparams.args.window_size,
+                                                                                buy_thresh=trader.hparams.args.buy_thresh)
 
-trader.cuda();
+if torch.cuda.is_available():
+    trader.cuda(); # if available!
+
 trader.eval();
-
 with torch.no_grad():
     for price, pct_change in today_loader:
+        if torch.cuda.is_available():
+            price = price.cuda()# if available!
 
 #        print(trader.forward(price).item(),'||', pct_change.item())
-        y_pred = trader.forward(price.cuda()).item()
+        y_pred = trader.forward(price).item()
 
-print("Predicted % change today: ", 100*y_pred.cpu())
-# TODO use stored args for prior years etc.
-print("Note caveats such as what time this is done at compared to stored price, among many other factors. ")
+
+print("Predicted % change for most recent datapoint: ", 100*y_pred)
+
+
+cg = CoinGeckoAPI()
+
+today = cg.get_price(ids=trader.hparams.args.crypto, vs_currencies=trader.hparams.args.values,include_last_updated_at=True)['bitcoin']['last_updated_at']
+today_df = pd.DataFrame([])
+
+today_df['timestamp'] = [today]
+today_df['date'] = [datetime.fromtimestamp(today)] if trader.hparams.args.prior_years == 0 else [datetime.fromtimestamp(today // 1000)]
+today_df['predicted_pct_change'] = [y_pred]
+today_df['model'] = [model_path] # more!
+today_df['resolution'] = [approx_resolution]
+
+if os.path.exists('../bin/predicted_changes.csv'):
+    online_df = pd.read_csv('../bin/predicted_changes.csv')
+    online_df = online_df.append(today_df)
+    online_df.to_csv('../bin/predicted_changes.csv',index=False)
+
+else:
+    today_df.to_csv('../bin/predicted_changes.csv',index=False)

@@ -174,27 +174,25 @@ class Decoder(nn.Module):
 class Transformer(nn.Module):
     def __init__(self,
                  n_layers=6,
-                 hidden_size=32,
                  filter_size=64,
                  dropout_rate=0.1,
                 window_size=32):
         super(Transformer, self).__init__()
 
         self.window_size = window_size
-        self.hidden_size = hidden_size
-        self.emb_scale = hidden_size ** 0.5
+        self.hidden_size = window_size
+        self.emb_scale = window_size ** 0.5
 
+        self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
+        #self.price_embedding = nn.Linear(window_size,hidden_size) # this 1 can be scaled to # of cryptos, trends, etc. Need to fix loaders as well for that but interesting opportunity.
 
+        #nn.init.normal_(self.price_embedding.weight, mean=0,
+                    #    std=hidden_size**-0.5)
 
-        self.price_embedding = nn.Linear(window_size,hidden_size) # this 1 can be scaled to # of cryptos, trends, etc. Need to fix loaders as well for that but interesting opportunity.
-
-        nn.init.normal_(self.price_embedding.weight, mean=0,
-                        std=hidden_size**-0.5)
-
-        self.decoder = Decoder(hidden_size, filter_size,
+        self.decoder = Decoder(window_size, filter_size,
                                dropout_rate, n_layers)
 
-        self.output_mlp = FeedForwardNetwork(hidden_size,filter_size,dropout_rate,output_size=1)
+        self.output_mlp = FeedForwardNetwork(window_size,filter_size,dropout_rate,output_size=1)
 
 
         # For positional encoding
@@ -213,7 +211,7 @@ class Transformer(nn.Module):
 
     def forward(self, x):
 
-        self_mask = create_self_mask(self.window_size).cuda()
+        self_mask = create_self_mask(self.window_size).to(self.device)
         x = self.decode(x, self_mask)
         x = self.output_mlp(x[:,-1,:])
         return x
@@ -223,7 +221,7 @@ class Transformer(nn.Module):
 
 
 
-        x = torch.stack([x[i,:] * torch.eye(x.shape[1]).cuda() for i in range(x.shape[0])]) # my way of making hidden size for this "embedding"
+        x = torch.stack([x[i,:] * torch.eye(x.shape[1]).to(self.device) for i in range(x.shape[0])]) # my way of making hidden size for this "embedding"
         x *= self.emb_scale
         x += self.get_position_encoding(x)
 

@@ -6,3 +6,4 @@ datetime
 numpy
 pandas
 matplotlib
+plotly

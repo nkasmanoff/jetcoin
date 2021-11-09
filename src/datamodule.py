@@ -12,6 +12,7 @@ class CryptoDataModule(pl.LightningDataModule):
     def __init__(self,
                  crypto: str = "bitcoin",
                  prior_years: int = 5,
+                 prior_days: int = 7,
                  values: str = 'usd',
                  buy_thresh: int = 3,
                  labels_to_load: str = 'pct_change',
@@ -20,6 +21,7 @@ class CryptoDataModule(pl.LightningDataModule):
         super().__init__()
         self.crypto = crypto
         self.prior_years = prior_years
+        self.prior_days = prior_days
         self.values = values
         self.buy_thresh = buy_thresh
         self.labels_to_load = labels_to_load.split(',')
@@ -27,7 +29,8 @@ class CryptoDataModule(pl.LightningDataModule):
         self.batch_size = batch_size
 
     def setup(self):
-        self.train_loader, self.val_loader, self.test_loader, self.today_loader = create_dataloaders(prior_years=self.prior_years,
+        self.train_loader, self.val_loader, self.test_loader, self.today_loader, self.approx_resolution = create_dataloaders(prior_years=self.prior_years,
+                                                                                    prior_days = self.prior_days,
                                                                                   crypto=self.crypto,
                                                                                   values=self.values,
                                                                                   batch_size=self.batch_size,

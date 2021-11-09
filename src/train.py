@@ -27,24 +27,22 @@ class CryptoTrainer(pl.LightningModule):
     def __init__(self,args,
                  n_layers,
                  filter_size,
-                 dropout_rate):
+                 dropout_rate,
+                 resolution):
         super().__init__()
 
         self.save_hyperparameters() # turns args to self.hparams
 
+
+
         self.learning_rate = args.learning_rate
         self.weight_decay = args.weight_decay
-
-
-        hidden_size = args.window_size
+        self.resolution = resolution
 
         self.model =  Transformer(n_layers=n_layers,
-                 hidden_size=hidden_size,
                  filter_size=filter_size,
                  dropout_rate=dropout_rate,
                 window_size=args.window_size)
-
-        # todo - some wandb logging
 
 
     def forward(self,x):
@@ -71,9 +69,26 @@ class CryptoTrainer(pl.LightningModule):
 
         self.log('valid_loss', loss, on_epoch=True)
 
-        return loss
+        return {'predicted': y_pred, 'truth': y, 'loss': loss}
 
+    def validation_epoch_end(self, validation_step_outputs):
+        y_pred = np.array([])
+        y_true = np.array([])
+        for out in validation_step_outputs:
+            y_pred = np.concatenate([y_pred,out['predicted'].numpy().flatten()])
+            y_true = np.concatenate([y_true,out['truth'].numpy().flatten()])
 
+        fig = plt.figure()
+        plt.plot(y_pred,label='predicted')
+        plt.plot(y_true,label='truth')
+        plt.ylabel("% Change")
+        plt.xlabel("Validation Date")
+        plt.legend()
+
+        wandb.log({"chart": fig})
+
+        del fig
+        
     #test step
     def test_step(self,batch,batch_idx):
         X, y = batch
@@ -121,6 +136,8 @@ def main():
     parser.add_argument('--batch_size', type=int,
                         default=32)
     parser.add_argument('--prior_years', type=int,
+                        default=5)
+    parser.add_argument('--prior_days', type=int,
                         default=5)
     parser.add_argument('--window_size', type=int,
                         default=28)
@@ -172,6 +189,7 @@ def main():
     # ------------
     data_module = CryptoDataModule(crypto=args.crypto,
                  prior_years=args.prior_years,
+                 prior_days=args.prior_days,
                  values=args.values,
                  buy_thresh=args.buy_thresh,
                  labels_to_load=args.labels_to_load,
@@ -188,7 +206,8 @@ def main():
     trader = CryptoTrainer(args,
                  n_layers=args.n_layers,
                  filter_size=args.filter_size,
-                 dropout_rate=args.dropout_rate)
+                 dropout_rate=args.dropout_rate,
+                 resolution = data_module.approx_resolution)
 
 
 
