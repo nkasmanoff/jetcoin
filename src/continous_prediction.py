@@ -77,7 +77,7 @@ def predict(model_path):
 
 i = 0
 monitoring_df = pd.DataFrame([])
-while i < 10:
+while i < 3:
     predicted_prices = []
     actual_prices = []
     timestamps = []
