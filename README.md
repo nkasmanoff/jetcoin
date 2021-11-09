@@ -13,15 +13,15 @@ First, build the docker container with the commands below.
   ## sudo docker run --runtime nvidia -it --rm --network host --volume ~/jetcoin:/jetcoin nsk367/jetcoin
 
 
-Next, let's train a model. It is worth noting this is not really a serious project on price prediction, so let's leave the hparams and run with little attention to that.
+Next, let's train a model. It is worth noting this is not really a serious project on price prediction, so let's leave the hparams and run with little attention to that. After cd'ing into the src directory, run the following commands. 
 
-  ## python src/train.py --gpus 1
+  ## python train.py --gpus 1
 
 
 Now that we have some model trained, the continous prediction begins
 
 
-  ## python src/continous_prediction.py
+  ## python continous_prediction.py
 
 After specifying the model path, this will continuously predict and download prices to see how well the model actually does after looking at the produced csv files.
 
