@@ -75,8 +75,8 @@ class CryptoTrainer(pl.LightningModule):
         y_pred = np.array([])
         y_true = np.array([])
         for out in validation_step_outputs:
-            y_pred = np.concatenate([y_pred,out['predicted'].numpy().flatten()])
-            y_true = np.concatenate([y_true,out['truth'].numpy().flatten()])
+            y_pred = np.concatenate([y_pred,out['predicted'].cpu().numpy().flatten()])
+            y_true = np.concatenate([y_true,out['truth'].cpu().numpy().flatten()])
 
         fig = plt.figure()
         plt.plot(y_pred,label='predicted')
@@ -88,7 +88,7 @@ class CryptoTrainer(pl.LightningModule):
         wandb.log({"chart": fig})
 
         del fig
-        
+
     #test step
     def test_step(self,batch,batch_idx):
         X, y = batch

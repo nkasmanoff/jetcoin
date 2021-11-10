@@ -13,7 +13,7 @@ from datetime import datetime
 import numpy as np
 import time
 
-model_path = # TODO # "/Users/noahkasmanoff/Desktop/F21/jetcoin/src/jetcoin-src/u6ml995c/checkpoints/epoch=18-step=968.ckpt"
+model_path = "/home/noah/jetcoin/src/jetcoin-src/1k4o6ktf/checkpoints/epoch=69-step=3989.ckpt" #"/home/noah/jetcoin/src/jetcoin-src/3tgmm6u4/checkpoints/epoch=29-step=1709.ckpt" # just to start :-)
 
 def predict(model_path):
     """
@@ -51,16 +51,24 @@ def predict(model_path):
 
     cg = CoinGeckoAPI()
 
-    today = cg.get_price(ids=trader.hparams.args.crypto, vs_currencies=trader.hparams.args.values,include_last_updated_at=True)['bitcoin']['last_updated_at']
+    last_update = cg.get_price(ids=trader.hparams.args.crypto, vs_currencies=trader.hparams.args.values,include_last_updated_at=True)['bitcoin']
+
+    today = last_update['last_updated_at']
+    current_price = last_update[trader.hparams.args.values]
+
     today_df = pd.DataFrame([])
 
     today_df['timestamp'] = [today]
-    today_df['date'] = [datetime.fromtimestamp(today)] if trader.hparams.args.prior_years == 0 else [datetime.fromtimestamp(today // 1000)]
+    today_df['date'] = [datetime.fromtimestamp(today)]
     today_df['predicted_pct_change'] = [y_pred]
     today_df['predicted_price'] = price.mean().item()*y_pred + price.mean().item()  # this uses the mean and std.. which I no longer have.
+    today_df['current_price'] = [current_price]
+
     today_df['model'] = [model_path] # more!
     today_df['resolution'] = [approx_resolution]
     today_df['check_at'] = [datetime.fromtimestamp(today+approx_resolution)] if trader.hparams.args.prior_years == 0 else [datetime.fromtimestamp(today // 1000)]
+
+    today_df['buy'] = today_df.apply(lambda z: 1 if z['predicted_price'] > z['current_price'] else 0,axis=1)
 
     if os.path.exists('../bin/predicted_changes.csv'):
         online_df = pd.read_csv('../bin/predicted_changes.csv')
@@ -76,11 +84,14 @@ def predict(model_path):
 
 
 i = 0
+cg = CoinGeckoAPI()
 monitoring_df = pd.DataFrame([])
+predicted_prices = []
+actual_prices = []
+timestamps = []
+
 while i < 3:
-    predicted_prices = []
-    actual_prices = []
-    timestamps = []
+
 
     if os.path.exists('../bin/predicted_changes.csv'):
         predicted_df = pd.read_csv('../bin/predicted_changes.csv')
