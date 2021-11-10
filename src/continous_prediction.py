@@ -17,7 +17,7 @@ from datetime import datetime
 import numpy as np
 import time
 from send_email import send_email
-model_path = "/Users/noahkasmanoff/Desktop/F21/jetcoin/src/jetcoin-src/13kfa275/checkpoints/epoch=0-step=47.ckpt"
+model_path = "/home/noah/jetcoin/src/jetcoin-src/2ezjy1vf/checkpoints/epoch=74-step=4274.ckpt" #"/Users/noahkasmanoff/Desktop/F21/jetcoin/src/jetcoin-src/13kfa275/checkpoints/epoch=0-step=47.ckpt"
 
 def predict(trader):
     """
@@ -61,8 +61,8 @@ def predict(trader):
 
     today_df['timestamp'] = [today]
     today_df['date'] = [datetime.fromtimestamp(today)]
-    today_df['predicted_pct_change'] = [y_pred]
-    today_df['predicted_price'] = price.mean().item()*y_pred + price.mean().item()  # this uses the mean and std.. which I no longer have.
+    today_df['predicted_pct_change'] = [y_pred.item()]
+    today_df['predicted_price'] = price.mean().item()*y_pred.detach().cpu().numpy() + price.mean().item()  # this uses the mean and std.. which I no longer have.
     today_df['current_price'] = [current_price]
 
     today_df['model'] = [model_path] # more!
@@ -72,7 +72,7 @@ def predict(trader):
 
     today_df['buy'] = today_df.apply(lambda z: 1 if z['predicted_price'] > z['current_price'] else 0,axis=1)
 
-    if today['buy'].values[-1] == 1:
+    if today_df['buy'].values[-1] == 1:
         print("Sending email... ")
         send_email(datetime.now(),check_at)
 
@@ -129,6 +129,9 @@ def monitor():
             current_price = cg.get_price(ids='bitcoin', vs_currencies='usd',include_last_updated_at=True)['bitcoin']['usd']
             true_pct_change = (current_price - rolling_mean) / rolling_mean
             trader = update_model(trader, y_pred, true_pct_change)
+            
+           # trader.save_checkpoint("../bin/most_recent.ckpt")
+
 
             # this y pred persists until the next current price and % change, allowing us to get the updated weights. For that reason
             # very important these lines are after the update model one.
