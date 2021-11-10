@@ -1,6 +1,6 @@
 # jetcoin
 
-Crypto trader using NVIDIA Jetson to train and track prices.
+Crypto trader using NVIDIA Jetson to train on and track prices.
 
 Steps to run this:
 
