@@ -1,5 +1,9 @@
 """
 Meant to be on continuously for monitoring pricing compared to predictions
+
+TODO - update to save predictions and this results and current results table to wandb  or another service.
+
+
 """
 
 
@@ -13,7 +17,7 @@ from datetime import datetime
 import numpy as np
 import time
 
-model_path = "/home/noah/jetcoin/src/jetcoin-src/1k4o6ktf/checkpoints/epoch=69-step=3989.ckpt" #"/home/noah/jetcoin/src/jetcoin-src/3tgmm6u4/checkpoints/epoch=29-step=1709.ckpt" # just to start :-)
+model_path =# "/home/noah/jetcoin/src/jetcoin-src/1k4o6ktf/checkpoints/epoch=69-step=3989.ckpt" #"/home/noah/jetcoin/src/jetcoin-src/3tgmm6u4/checkpoints/epoch=29-step=1709.ckpt" # just to start :-)
 
 def predict(model_path):
     """
@@ -82,46 +86,52 @@ def predict(model_path):
 
 
 
+def monitor():
 
-i = 0
-cg = CoinGeckoAPI()
-monitoring_df = pd.DataFrame([])
-predicted_prices = []
-actual_prices = []
-timestamps = []
-
-while i < 3:
+    cg = CoinGeckoAPI()
+    monitoring_df = pd.DataFrame([])
 
 
-    if os.path.exists('../bin/predicted_changes.csv'):
-        predicted_df = pd.read_csv('../bin/predicted_changes.csv')
-    else:
-        predicted_df = predict(model_path)
+    while True:
+        temp_df = pd.DataFrame([]) # for the current result, append and save to moniotoring df.
+
+        if os.path.exists('../bin/predicted_changes.csv'):
+            predicted_df = pd.read_csv('../bin/predicted_changes.csv')
+        else:
+            predicted_df = predict(model_path)
 
 
-    predicted_df['check_at'] = pd.to_datetime(predicted_df['check_at'])
+        predicted_df['check_at'] = pd.to_datetime(predicted_df['check_at'])
 
-    if np.datetime64(datetime.now()) > predicted_df['check_at'].values[-1]:
-        # ready to log what the actual price was, and make another prediction.
-        current_price = cg.get_price(ids='bitcoin', vs_currencies='usd',include_last_updated_at=True)['bitcoin']['usd']
-        predicted_price = predicted_df['predicted_price'].values[-1]
-        predicted_df = predict(model_path)
-
-        actual_prices.append(current_price)
-        predicted_prices.append(predicted_price)
-        timestamps.append(datetime.now())
-
-        i += 1
-
-    else:
-        print("Not ready yet. Current time is ", datetime.now(), 'wait until ', predicted_df['check_at'].values[-1])
-        delta = int((predicted_df['check_at'].values[-1] - np.datetime64(datetime.now())) // 1e9)
-        print("sleeping for ", delta , 'seconds. ')
-        time.sleep(delta)
+        if np.datetime64(datetime.now()) > predicted_df['check_at'].values[-1]:
+            # ready to log what the actual price was, and make another prediction.
+            current_price = cg.get_price(ids='bitcoin', vs_currencies='usd',include_last_updated_at=True)['bitcoin']['usd']
+            predicted_price = predicted_df['predicted_price'].values[-1]
+            predicted_df = predict(model_path)
 
 
-monitoring_df['predicted_prices'] = predicted_prices
-monitoring_df['actual_prices'] = actual_prices
-monitoring_df['timestamps'] = timestamps
+            temp_df['actual_price'] = [current_price]
+            temp_df['predicted_price'] = [predicted_price]
+            temp_df['timestamp'] = [datetime.now()]
 
-monitoring_df.to_csv('../bin/results.csv',index=False)
+
+            monitoring_df = monitoring_df.append(temp_df)
+            monitoring_df.to_csv('../bin/results.csv',index=False)
+            #i += 1
+
+        else:
+            print("Not ready yet. Current time is ", datetime.now(), 'wait until ', predicted_df['check_at'].values[-1])
+            delta = int((predicted_df['check_at'].values[-1] - np.datetime64(datetime.now())) // 1e9)
+            print("sleeping for ", delta , 'seconds. ')
+            time.sleep(delta)
+
+
+    monitoring_df = monitoring_df.append(temp_df)
+
+    monitoring_df.to_csv('../bin/results.csv',index=False)
+
+    return
+
+
+if __name__ == '__main__':
+    monitor()
