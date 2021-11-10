@@ -88,7 +88,10 @@ def update_model(trader,y_pred, true_pct_change):
     This should allow the model to be more flexibile to real time variability.
     """
     print("Adjusting model weights...")
+
     true_pct_change = torch.Tensor([true_pct_change])
+    if torch.cuda.is_available():
+        true_pct_change = true_pct_change.cuda(); # if available!
 
 
     optimizer = torch.optim.SGD(trader.parameters(), lr=trader.learning_rate, weight_decay=trader.weight_decay)
