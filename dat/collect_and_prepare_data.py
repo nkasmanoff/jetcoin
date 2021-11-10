@@ -20,7 +20,7 @@ def collect_data(prior_years, prior_days, crypto, values):
 
     cg = CoinGeckoAPI()
 
-    today = cg.get_price(ids=crypto, vs_currencies=values,include_last_updated_at=True)['bitcoin']['last_updated_at']
+    today = cg.get_price(ids=crypto, vs_currencies=values,include_last_updated_at=True)[crypto]['last_updated_at']
     start = int(today - prior_years*31536000 - prior_days*86400) # subtract prior years and days
 
 
@@ -70,15 +70,15 @@ def prepare_data(prior_years=5, prior_days = 7,crypto='bitcoin',values='usd', bu
     """
 
     coin_df,approx_resolution = collect_data(prior_years=prior_years,prior_days=prior_days,crypto=crypto,values=values)
-    coin_df['moving_avg'] = coin_df['bitcoin_price'].rolling(window=window).mean().shift(1) # for day i, computes the window rolling average for the prior i-1 to i-1-window days.
+    coin_df['moving_avg'] = coin_df[crypto+'_price'].rolling(window=window).mean().shift(1) # for day i, computes the window rolling average for the prior i-1 to i-1-window days.
     #coin_df.dropna(inplace=True)
-    coin_df['pct_change'] =  (coin_df['bitcoin_price'] - coin_df['moving_avg']) / coin_df['moving_avg']
+    coin_df['pct_change'] =  (coin_df[crypto+'_price'] - coin_df['moving_avg']) / coin_df['moving_avg']
 
 
     coin_json = []
     for i in range(window,coin_df.shape[0]):
         pct_change = coin_df['pct_change'].values[i]
-        prices = coin_df['bitcoin_price'].values[i-window:i]
+        prices = coin_df[crypto+'_price'].values[i-window:i]
         date = str(coin_df['date'].values[i]).split('T')[0]
 
         coin_json.append({
@@ -107,7 +107,7 @@ def prepare_data(prior_years=5, prior_days = 7,crypto='bitcoin',values='usd', bu
 
 
     coin_today = []
-    prices = coin_df['bitcoin_price'].values[coin_df.shape[0]-window:coin_df.shape[0]+1]
+    prices = coin_df[crypto+'_price'].values[coin_df.shape[0]-window:coin_df.shape[0]+1]
     date = 'today'
     coin_today.append({'prices':prices,
                        'date':date,
