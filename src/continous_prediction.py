@@ -16,7 +16,7 @@ from pycoingecko import CoinGeckoAPI
 from datetime import datetime
 import numpy as np
 import time
-
+from send_email import send_email
 model_path = "/Users/noahkasmanoff/Desktop/F21/jetcoin/src/jetcoin-src/13kfa275/checkpoints/epoch=0-step=47.ckpt"
 
 def predict(trader):
@@ -67,9 +67,14 @@ def predict(trader):
 
     today_df['model'] = [model_path] # more!
     today_df['resolution'] = [approx_resolution]
-    today_df['check_at'] = [datetime.fromtimestamp(today+approx_resolution)]
+    check_at = datetime.fromtimestamp(today+approx_resolution)
+    today_df['check_at'] = [check_at]
 
     today_df['buy'] = today_df.apply(lambda z: 1 if z['predicted_price'] > z['current_price'] else 0,axis=1)
+
+    if today['buy'].values[-1] == 1:
+        print("Sending email... ")
+        send_email(datetime.now(),check_at)
 
     if os.path.exists('../bin/predicted_changes.csv'):
         online_df = pd.read_csv('../bin/predicted_changes.csv')
