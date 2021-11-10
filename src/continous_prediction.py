@@ -17,14 +17,12 @@ from datetime import datetime
 import numpy as np
 import time
 
-model_path =# "/home/noah/jetcoin/src/jetcoin-src/1k4o6ktf/checkpoints/epoch=69-step=3989.ckpt" #"/home/noah/jetcoin/src/jetcoin-src/3tgmm6u4/checkpoints/epoch=29-step=1709.ckpt" # just to start :-)
+model_path = "/Users/noahkasmanoff/Desktop/F21/jetcoin/src/jetcoin-src/13kfa275/checkpoints/epoch=0-step=47.ckpt"
 
-def predict(model_path):
+def predict(trader):
     """
     Returns the predicted price and percent change based on the input model path's configuration
     """
-
-    trader = CryptoTrainer.load_from_checkpoint(model_path)
 
 
     # TODO -save all these args to model, add to trader. for loading loaders
@@ -41,16 +39,15 @@ def predict(model_path):
         trader.cuda(); # if available!
 
     trader.eval();
-    with torch.no_grad():
-        for price, price_norm, date, pct_change in today_loader:
-            if torch.cuda.is_available():
-                price_norm = price_norm.cuda()# if available!
+    for price, price_norm, date, pct_change in today_loader:
+        if torch.cuda.is_available():
+            price_norm = price_norm.cuda()# if available!
 
-    #        print(trader.forward(price).item(),'||', pct_change.item())
-            y_pred = trader.forward(price_norm).item()
+#        print(trader.forward(price).item(),'||', pct_change.item())
+        y_pred = trader.forward(price_norm)#.item()
 
 
-        print("Predicted % change for most recent datapoint: ", 100*y_pred)
+        print("Predicted % change for most recent datapoint: ", 100*y_pred.item())
 
 
     cg = CoinGeckoAPI()
@@ -70,7 +67,7 @@ def predict(model_path):
 
     today_df['model'] = [model_path] # more!
     today_df['resolution'] = [approx_resolution]
-    today_df['check_at'] = [datetime.fromtimestamp(today+approx_resolution)] if trader.hparams.args.prior_years == 0 else [datetime.fromtimestamp(today // 1000)]
+    today_df['check_at'] = [datetime.fromtimestamp(today+approx_resolution)]
 
     today_df['buy'] = today_df.apply(lambda z: 1 if z['predicted_price'] > z['current_price'] else 0,axis=1)
 
@@ -82,15 +79,32 @@ def predict(model_path):
     else:
         today_df.to_csv('../bin/predicted_changes.csv',index=False)
 
-    return today_df
+    return today_df, y_pred, price.mean().item()
+
+def update_model(trader,y_pred, true_pct_change):
+    """
+    Take a very small gradient update step based on how close our predicted percent change was to the true.
+
+    This should allow the model to be more flexibile to real time variability.
+    """
+    print("Adjusting model weights...")
+    true_pct_change = torch.Tensor([true_pct_change])
 
 
+    optimizer = torch.optim.SGD(trader.parameters(), lr=trader.learning_rate, weight_decay=trader.weight_decay)
+    optimizer.zero_grad()
+    loss = torch.nn.functional.mse_loss(y_pred,true_pct_change)
+    loss.backward()
+    optimizer.step()
+
+    return trader
 
 def monitor():
 
     cg = CoinGeckoAPI()
     monitoring_df = pd.DataFrame([])
 
+    trader = CryptoTrainer.load_from_checkpoint(model_path)
 
     while True:
         temp_df = pd.DataFrame([]) # for the current result, append and save to moniotoring df.
@@ -98,17 +112,20 @@ def monitor():
         if os.path.exists('../bin/predicted_changes.csv'):
             predicted_df = pd.read_csv('../bin/predicted_changes.csv')
         else:
-            predicted_df = predict(model_path)
-
+            predicted_df, y_pred, rolling_mean = predict(trader)
 
         predicted_df['check_at'] = pd.to_datetime(predicted_df['check_at'])
 
         if np.datetime64(datetime.now()) > predicted_df['check_at'].values[-1]:
             # ready to log what the actual price was, and make another prediction.
             current_price = cg.get_price(ids='bitcoin', vs_currencies='usd',include_last_updated_at=True)['bitcoin']['usd']
-            predicted_price = predicted_df['predicted_price'].values[-1]
-            predicted_df = predict(model_path)
+            true_pct_change = (current_price - rolling_mean) / rolling_mean
+            trader = update_model(trader, y_pred, true_pct_change)
 
+            # this y pred persists until the next current price and % change, allowing us to get the updated weights. For that reason
+            # very important these lines are after the update model one.
+            predicted_price = predicted_df['predicted_price'].values[-1]
+            predicted_df, y_pred, rolling_mean = predict(trader) # it predicts and updates the df
 
             temp_df['actual_price'] = [current_price]
             temp_df['predicted_price'] = [predicted_price]
@@ -117,7 +134,6 @@ def monitor():
 
             monitoring_df = monitoring_df.append(temp_df)
             monitoring_df.to_csv('../bin/results.csv',index=False)
-            #i += 1
 
         else:
             print("Not ready yet. Current time is ", datetime.now(), 'wait until ', predicted_df['check_at'].values[-1])
