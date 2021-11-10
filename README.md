@@ -12,13 +12,8 @@ $ sudo docker build -t nsk367/jetcoin .
 
 
 ```bash
-$ sudo docker run --runtime nvidia -it --rm --network host --volume ~/jetcoin:/jetcoin nsk367/jetcoin
+$ sudo docker run --runtime nvidia -it --rm --network host -v ~/jetcoin:/jetcoin nsk367/jetcoin
 ```
-
-
-
-sudo docker run --runtime nvidia -it --rm --network host --volume ~/jetcoin:/jetcoin nsk367/jetcoin
-
 
 
 Next, let's train a model. It is worth noting this is not really a serious project on price prediction, so let's leave the hparams and run with little attention to that. After cd'ing into the src directory, run the following commands.
