@@ -12,7 +12,7 @@ $ sudo docker build -t nsk367/jetcoin .
 
 
 ```bash
-$ sudo docker run --runtime nvidia -it --rm --network host -v ~/jetcoin:/jetcoin nsk367/jetcoin
+$ sudo docker run --runtime nvidia -it --rm --network host -v ~/jetcoin:/home/noah/jetcoin nsk367/jetcoin
 ```
 
 
