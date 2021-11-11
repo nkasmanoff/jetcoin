@@ -2,7 +2,11 @@
 Trainer object for watching and optimizing this model.
 
 Example usage:
+<<<<<<< HEAD
 python train.py --auto_lr_find False --gpus 1 --prior_years 0 --prior_days 90 --crypto 'bitcoin' --window_size 14 --weight_decay 5e-5
+=======
+python train.py --auto_lr_find False --gpus 0 --prior_years 0 --prior_days 90 --crypto 'bitcoin' --window_size 24 --batch_size 32
+>>>>>>> f137cfba180648fd9fb9ec89bb979022d6c56982
 """
 import pytorch_lightning as pl
 from datamodule import CryptoDataModule
@@ -81,6 +85,7 @@ class CryptoTrainer(pl.LightningModule):
         fig = plt.figure()
         plt.plot(y_pred,label='predicted')
         plt.plot(y_true,label='truth')
+        plt.axhline() # as long as on same side of this should be happy lolol 
         plt.ylabel("% Change")
         plt.xlabel("Validation Date")
         plt.legend()
@@ -141,6 +146,8 @@ def main():
                         default=5)
     parser.add_argument('--window_size', type=int,
                         default=28)
+    parser.add_argument('--pct_window', type=int,
+                        default=2)
     parser.add_argument('--buy_thresh', type=int,
                         default=5)
     parser.add_argument('--crypto', type=str,
@@ -194,6 +201,7 @@ def main():
                  buy_thresh=args.buy_thresh,
                  labels_to_load=args.labels_to_load,
                  window=args.window_size,
+                 pct_window=args.pct_window,
                  batch_size=args.batch_size,
             )
 

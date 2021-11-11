@@ -1,13 +1,14 @@
 import sys
 import torch
 from torch.utils.data import Dataset, DataLoader
-
+import numpy as np
+import matplotlib.pyplot as plt
 
 sys.path.append('../dat/')
 
 from collect_and_prepare_data import prepare_data
 
-
+from utils import get_bin_num, get_bins
 
 
 class CryptoDataset(Dataset):
@@ -46,11 +47,11 @@ class CryptoDataset(Dataset):
 
 
         if self.today: #when using today loader, it returns all relevant info.
-            return X, X_norm, self.coin_file[idx]['date'] ,torch.Tensor(y)
+            return X, X_norm, self.coin_file[idx]['moving_avg'], self.coin_file[idx]['date'],torch.Tensor(y)
 
         return X_norm, torch.Tensor(y)
 
-def create_dataloaders(prior_years,prior_days,crypto,values,buy_thresh,window,batch_size,labels_to_load):
+def create_dataloaders(prior_years,prior_days,crypto,values,buy_thresh,window,batch_size,labels_to_load, pct_window):
     """
     Runs full data loading and preparation pipeline to allow me to experiment with all aspects of
     the datasets as part of training.
@@ -64,7 +65,8 @@ def create_dataloaders(prior_years,prior_days,crypto,values,buy_thresh,window,ba
                                                                   prior_days=prior_days,
                                                             crypto=crypto,values=values,
                                                             buy_thresh = buy_thresh,
-                                                             window = window)
+                                                             window = window,
+                                                             pct_window = pct_window)
 
 
     train_dataset = CryptoDataset(coin_train,labels_to_load)
@@ -73,9 +75,20 @@ def create_dataloaders(prior_years,prior_days,crypto,values,buy_thresh,window,ba
     today_dataset = CryptoDataset(coin_today,labels_to_load,today=True)
 
 
-    train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True,num_workers = 4)
-    valid_loader = DataLoader(valid_dataset, batch_size=batch_size, shuffle=False,num_workers = 4)
-    test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False,num_workers = 4)
+    params = [i['pct_change'] for i in coin_train]
+    num_bins = 50 # fixed for now. More bins = smaller space between -> more weight to outliers as they do not get binned with others.
+    bin_sample_counts, bin_edges = get_bins(params, num_bins)
+    bin_weights = 1./torch.Tensor(bin_sample_counts)
+
+
+    train_targets = [get_bin_num(bin_edges,sample) for sample in params]
+    train_samples_weight = [bin_weights[bin_id] for bin_id in train_targets]
+    train_samples_weight = np.array(train_samples_weight)
+    train_sampler = torch.utils.data.sampler.WeightedRandomSampler(train_samples_weight, train_dataset.__len__())
+    train_loader = DataLoader(train_dataset, batch_size=batch_size,sampler=train_sampler,num_workers = 1) # sampler is mutually exclusive with shuffle
+
+    valid_loader = DataLoader(valid_dataset, batch_size=batch_size, shuffle=False,num_workers = 1)
+    test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False,num_workers = 1)
 
     today_loader = DataLoader(today_dataset, batch_size=1, shuffle=False)
 

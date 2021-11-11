@@ -35,13 +35,14 @@ def predict(trader):
                                                                             prior_years = trader.hparams.args.prior_years,
                                                                                 prior_days = trader.hparams.args.prior_days,
                                                                                 window = trader.hparams.args.window_size,
+                                                                                pct_window = trader.hparams.args.pct_window,
                                                                                     buy_thresh=trader.hparams.args.buy_thresh)
 
     if torch.cuda.is_available():
         trader.cuda(); # if available!
 
     trader.eval();
-    for price, price_norm, date, pct_change in today_loader:
+    for price, price_norm, moving_avg,  date, pct_change in today_loader: # bring the moving average along to automatically convert
         if torch.cuda.is_available():
             price_norm = price_norm.cuda()# if available!
 
@@ -64,7 +65,11 @@ def predict(trader):
     today_df['timestamp'] = [today]
     today_df['date'] = [datetime.fromtimestamp(today)]
     today_df['predicted_pct_change'] = [y_pred.item()]
+<<<<<<< HEAD
     today_df['predicted_price'] = price[-2:].mean().item()*y_pred.detach().cpu().numpy() + price[-2:].mean().item()  # take the rolling pct mean, obtain price. 
+=======
+    today_df['predicted_price'] = [moving_avg*y_pred.detach().cpu().numpy() + moving_avg] # this uses the mean and std.. which I no longer have.
+>>>>>>> f137cfba180648fd9fb9ec89bb979022d6c56982
     today_df['current_price'] = [current_price]
 
     today_df['model'] = [model_path] # more!
@@ -86,7 +91,11 @@ def predict(trader):
     else:
         today_df.to_csv('../bin/predicted_changes.csv',index=False)
 
+<<<<<<< HEAD
     return today_df, y_pred, price[-2:].mean().item()
+=======
+    return today_df, y_pred, moving_avg
+>>>>>>> f137cfba180648fd9fb9ec89bb979022d6c56982
 
 def update_model(trader,y_pred, true_pct_change):
     """
@@ -131,7 +140,7 @@ def monitor():
             current_price = cg.get_price(ids='bitcoin', vs_currencies='usd',include_last_updated_at=True)['bitcoin']['usd']
             true_pct_change = (current_price - rolling_mean) / rolling_mean
             trader = update_model(trader, y_pred, true_pct_change)
-            
+
            # trader.save_checkpoint("../bin/most_recent.ckpt")
 
 
