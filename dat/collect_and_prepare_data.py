@@ -108,7 +108,7 @@ def prepare_data(prior_years=5, prior_days = 7,crypto='bitcoin',values='usd', bu
 
 
     coin_train = coin_json#[:split1] # use full dataset for train, get really good!
-    coin_valid = coin_json[split1:] # take weights for best most recent performer. 
+    coin_valid = coin_json[split1:] # take weights for best most recent performer.
     coin_test = coin_json[split1:]
 
 

@@ -4,7 +4,7 @@ Meant to be on continuously for monitoring pricing compared to predictions
 TODO - update to save predictions and this results and current results table to wandb  or another service.
 
 
-Another TODO is include pct_window beyond the collect code, and make what I have here a bit more versatile. 
+Another TODO is include pct_window beyond the collect code, and make what I have here a bit more versatile.
 
 """
 
@@ -65,11 +65,7 @@ def predict(trader):
     today_df['timestamp'] = [today]
     today_df['date'] = [datetime.fromtimestamp(today)]
     today_df['predicted_pct_change'] = [y_pred.item()]
-<<<<<<< HEAD
-    today_df['predicted_price'] = price[-2:].mean().item()*y_pred.detach().cpu().numpy() + price[-2:].mean().item()  # take the rolling pct mean, obtain price. 
-=======
     today_df['predicted_price'] = [moving_avg*y_pred.detach().cpu().numpy() + moving_avg] # this uses the mean and std.. which I no longer have.
->>>>>>> f137cfba180648fd9fb9ec89bb979022d6c56982
     today_df['current_price'] = [current_price]
 
     today_df['model'] = [model_path] # more!
@@ -91,11 +87,7 @@ def predict(trader):
     else:
         today_df.to_csv('../bin/predicted_changes.csv',index=False)
 
-<<<<<<< HEAD
-    return today_df, y_pred, price[-2:].mean().item()
-=======
     return today_df, y_pred, moving_avg
->>>>>>> f137cfba180648fd9fb9ec89bb979022d6c56982
 
 def update_model(trader,y_pred, true_pct_change):
     """
