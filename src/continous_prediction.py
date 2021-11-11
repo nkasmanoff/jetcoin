@@ -33,13 +33,14 @@ def predict(trader):
                                                                             prior_years = trader.hparams.args.prior_years,
                                                                                 prior_days = trader.hparams.args.prior_days,
                                                                                 window = trader.hparams.args.window_size,
+                                                                                pct_window = trader.hparams.args.pct_window,
                                                                                     buy_thresh=trader.hparams.args.buy_thresh)
 
     if torch.cuda.is_available():
         trader.cuda(); # if available!
 
     trader.eval();
-    for price, price_norm, moving_avg,  date, pct_change in today_loader:
+    for price, price_norm, moving_avg,  date, pct_change in today_loader: # bring the moving average along to automatically convert
         if torch.cuda.is_available():
             price_norm = price_norm.cuda()# if available!
 
