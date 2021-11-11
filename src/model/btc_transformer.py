@@ -55,7 +55,7 @@ class FeedForwardNetwork(nn.Module):
 
 
 class MultiHeadAttention(nn.Module):
-    def __init__(self, hidden_size, dropout_rate, head_size=4):
+    def __init__(self, hidden_size, dropout_rate, head_size=8):
         super(MultiHeadAttention, self).__init__()
 
         self.head_size = head_size
@@ -192,7 +192,7 @@ class Transformer(nn.Module):
         self.decoder = Decoder(window_size, filter_size,
                                dropout_rate, n_layers)
 
-        self.output_mlp = FeedForwardNetwork(window_size,filter_size,dropout_rate,output_size=1)
+        self.output_mlp = FeedForwardNetwork(window_size*window_size,filter_size,dropout_rate,output_size=1)
 
 
         # For positional encoding
@@ -213,7 +213,7 @@ class Transformer(nn.Module):
 
         self_mask = create_self_mask(self.window_size).to(self.device)
         x = self.decode(x, self_mask)
-        x = self.output_mlp(x[:,-1,:])
+        x = self.output_mlp(x.flatten(start_dim=1))
         return x
 
 
