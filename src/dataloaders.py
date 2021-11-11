@@ -50,7 +50,7 @@ class CryptoDataset(Dataset):
 
         return X_norm, torch.Tensor(y)
 
-def create_dataloaders(prior_years,prior_days,crypto,values,buy_thresh,window,batch_size,labels_to_load):
+def create_dataloaders(prior_years,prior_days,crypto,values,buy_thresh,window,batch_size,labels_to_load, pct_window):
     """
     Runs full data loading and preparation pipeline to allow me to experiment with all aspects of
     the datasets as part of training.
@@ -64,7 +64,8 @@ def create_dataloaders(prior_years,prior_days,crypto,values,buy_thresh,window,ba
                                                                   prior_days=prior_days,
                                                             crypto=crypto,values=values,
                                                             buy_thresh = buy_thresh,
-                                                             window = window)
+                                                             window = window,
+                                                             pct_window = pct_window)
 
 
     train_dataset = CryptoDataset(coin_train,labels_to_load)

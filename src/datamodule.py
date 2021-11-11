@@ -17,6 +17,7 @@ class CryptoDataModule(pl.LightningDataModule):
                  buy_thresh: int = 3,
                  labels_to_load: str = 'pct_change',
                  window: int = 14,
+                 pct_window: int = 2,
                  batch_size: int = 32):
         super().__init__()
         self.crypto = crypto
@@ -26,6 +27,7 @@ class CryptoDataModule(pl.LightningDataModule):
         self.buy_thresh = buy_thresh
         self.labels_to_load = labels_to_load.split(',')
         self.window = window
+        self.pct_window = pct_window
         self.batch_size = batch_size
 
     def setup(self):
@@ -36,7 +38,8 @@ class CryptoDataModule(pl.LightningDataModule):
                                                                                   batch_size=self.batch_size,
                                                                                   buy_thresh=self.buy_thresh,
                                                                                   labels_to_load=self.labels_to_load,
-                                                                                  window=self.window)
+                                                                                  window=self.window,
+                                                                                  pct_window=self.pct_window)
 
 
     def train_dataloader(self):

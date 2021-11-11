@@ -2,7 +2,7 @@
 Trainer object for watching and optimizing this model.
 
 Example usage:
-python train.py --auto_lr_find False --gpus 1 --prior_years 0 --prior_days 90 --crypto 'bitcoin' --window_size 24 --batch_size 8
+python train.py --auto_lr_find False --gpus 1 --prior_years 0 --prior_days 90 --crypto 'bitcoin' --window_size 12 --batch_size 32
 """
 import pytorch_lightning as pl
 from datamodule import CryptoDataModule
@@ -141,6 +141,8 @@ def main():
                         default=5)
     parser.add_argument('--window_size', type=int,
                         default=28)
+    parser.add_argument('--pct_window', type=int,
+                        default=2)
     parser.add_argument('--buy_thresh', type=int,
                         default=5)
     parser.add_argument('--crypto', type=str,
@@ -194,6 +196,7 @@ def main():
                  buy_thresh=args.buy_thresh,
                  labels_to_load=args.labels_to_load,
                  window=args.window_size,
+                 pct_window=args.pct_window,
                  batch_size=args.batch_size,
             )
 
