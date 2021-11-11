@@ -43,7 +43,7 @@ def collect_data(prior_years, prior_days, crypto, values):
 
     return cg_df, approx_resolution
 
-def prepare_data(prior_years=5, prior_days = 7,crypto='bitcoin',values='usd', buy_thresh = .05, window = 7, pct_window = 2):
+def prepare_data(prior_years=5, prior_days = 7,crypto='bitcoin',values='usd', buy_thresh = .05, window = 7, pct_window = 3):
     """
     Converts data into a PyTorch ready format as we move feed this and variations into data loaders.
 
