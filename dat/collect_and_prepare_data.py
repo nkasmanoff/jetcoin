@@ -43,7 +43,7 @@ def collect_data(prior_years, prior_days, crypto, values):
 
     return cg_df, approx_resolution
 
-def prepare_data(prior_years=5, prior_days = 7,crypto='bitcoin',values='usd', buy_thresh = .05, window = 7):
+def prepare_data(prior_years=5, prior_days = 7,crypto='bitcoin',values='usd', buy_thresh = .05, window = 7, pct_window = 2):
     """
     Converts data into a PyTorch ready format as we move feed this and variations into data loaders.
 
@@ -61,7 +61,10 @@ def prepare_data(prior_years=5, prior_days = 7,crypto='bitcoin',values='usd', bu
             pct_change we want to invest in prior to seeing happend.
 
         window : int
-            # of days to compute rolling average for.
+            # of days to collect data for
+            
+        pct_window : int
+            # of units to compute the percent change for, thus what we're investing with. 
 
     Returns:
         coin_json : list
@@ -70,7 +73,7 @@ def prepare_data(prior_years=5, prior_days = 7,crypto='bitcoin',values='usd', bu
     """
 
     coin_df,approx_resolution = collect_data(prior_years=prior_years,prior_days=prior_days,crypto=crypto,values=values)
-    coin_df['moving_avg'] = coin_df[crypto+'_price'].rolling(window=window).mean().shift(1) # for day i, computes the window rolling average for the prior i-1 to i-1-window days.
+    coin_df['moving_avg'] = coin_df[crypto+'_price'].rolling(window=pct_window).mean().shift(1) # for day i, computes the window rolling average for the prior i-1 to i-1-window units.
     #coin_df.dropna(inplace=True)
     coin_df['pct_change'] =  (coin_df[crypto+'_price'] - coin_df['moving_avg']) / coin_df['moving_avg']
 
