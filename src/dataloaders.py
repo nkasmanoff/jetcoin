@@ -46,7 +46,7 @@ class CryptoDataset(Dataset):
 
 
         if self.today: #when using today loader, it returns all relevant info.
-            return X, X_norm, self.coin_file[idx]['date'] ,torch.Tensor(y)
+            return X, X_norm, self.coin_file[idx]['moving_avg'], self.coin_file[idx]['date'],torch.Tensor(y)
 
         return X_norm, torch.Tensor(y)
 

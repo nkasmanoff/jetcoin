@@ -62,9 +62,9 @@ def prepare_data(prior_years=5, prior_days = 7,crypto='bitcoin',values='usd', bu
 
         window : int
             # of days to collect data for
-            
+
         pct_window : int
-            # of units to compute the percent change for, thus what we're investing with. 
+            # of units to compute the percent change for, thus what we're investing with.
 
     Returns:
         coin_json : list
@@ -82,12 +82,15 @@ def prepare_data(prior_years=5, prior_days = 7,crypto='bitcoin',values='usd', bu
     for i in range(window,coin_df.shape[0]):
         pct_change = coin_df['pct_change'].values[i]
         prices = coin_df[crypto+'_price'].values[i-window:i]
+        moving_avg = coin_df['moving_avg'].values[i]
         date = str(coin_df['date'].values[i]).split('T')[0]
 
         coin_json.append({
             'pct_change':pct_change,
             'prices':prices,
+            'moving_avg': moving_avg,
             'date':date
+
         })
 
     #assign labels
@@ -103,7 +106,7 @@ def prepare_data(prior_years=5, prior_days = 7,crypto='bitcoin',values='usd', bu
     split2 = int(len(coin_json)* .15) # validation 15 %
     # note I have no test set. This is fine for now, but an issue later for sure.
 
-    
+
     coin_train = coin_json[:split1]
     coin_valid = coin_json[split1:split1+split2]
     coin_test = coin_json[split1+split2:]
@@ -112,8 +115,10 @@ def prepare_data(prior_years=5, prior_days = 7,crypto='bitcoin',values='usd', bu
     coin_today = []
     prices = coin_df[crypto+'_price'].values[coin_df.shape[0]-window:coin_df.shape[0]+1]
     date = 'today'
+    moving_avg = coin_df['moving_avg'].values[-1] # last avg price
     coin_today.append({'prices':prices,
                        'date':date,
+                       'moving_avg': moving_avg,
                        'pct_change':np.nan})
 
     return coin_train, coin_valid, coin_test, coin_today, approx_resolution
