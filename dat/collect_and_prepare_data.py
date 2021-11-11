@@ -102,14 +102,14 @@ def prepare_data(prior_years=5, prior_days = 7,crypto='bitcoin',values='usd', bu
 
     # create and save splits of data.
 
-    split1 = int(len(coin_json) * .85) # training 85 %
-    split2 = int(len(coin_json)* .15) # validation 15 %
+    split1 = int(len(coin_json) *.9 ) # training 90 %
+    split2 = int(len(coin_json)* .1) # validation 10 %
     # note I have no test set. This is fine for now, but an issue later for sure.
 
 
     coin_train = coin_json[:split1]
-    coin_valid = coin_json[split1:split1+split2]
-    coin_test = coin_json[split1+split2:]
+    coin_valid = coin_json[split1:]
+    coin_test = coin_json[split1:]
 
 
     coin_today = []
