@@ -19,7 +19,9 @@ from datetime import datetime
 import numpy as np
 import time
 from send_email import send_email
-model_path = "/home/noah/jetcoin/src/jetcoin-src/2ezjy1vf/checkpoints/epoch=74-step=4274.ckpt" #"/Users/noahkasmanoff/Desktop/F21/jetcoin/src/jetcoin-src/13kfa275/checkpoints/epoch=0-step=47.ckpt"
+
+
+model_path = "/home/noah/jetcoin/src/jetcoin-src/xz5rmmjw/checkpoints/epoch=66-step=3818.ckpt" #"/Users/noahkasmanoff/Desktop/F21/jetcoin/src/jetcoin-src/13kfa275/checkpoints/epoch=0-step=47.ckpt"
 
 def predict(trader):
     """
@@ -65,7 +67,7 @@ def predict(trader):
     today_df['timestamp'] = [today]
     today_df['date'] = [datetime.fromtimestamp(today)]
     today_df['predicted_pct_change'] = [y_pred.item()]
-    today_df['predicted_price'] = [moving_avg*y_pred.detach().cpu().numpy() + moving_avg] # this uses the mean and std.. which I no longer have.
+    today_df['predicted_price'] = [moving_avg.item()*y_pred.item() + moving_avg.item()] # this uses the mean and std.. which I no longer have.
     today_df['current_price'] = [current_price]
 
     today_df['model'] = [model_path] # more!
