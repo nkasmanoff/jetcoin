@@ -21,7 +21,9 @@ import time
 from send_email import send_email
 
 
-model_path = "/home/noah/jetcoin/src/jetcoin-src/xz5rmmjw/checkpoints/epoch=66-step=3818.ckpt" #"/Users/noahkasmanoff/Desktop/F21/jetcoin/src/jetcoin-src/13kfa275/checkpoints/epoch=0-step=47.ckpt"
+model_path = "/Users/noahkasmanoff/Desktop/F21/jetcoin/src/jetcoin-src/37zvoms1/checkpoints/last.ckpt"
+
+#"/home/noah/jetcoin/src/jetcoin-src/xz5rmmjw/checkpoints/epoch=66-step=3818.ckpt" #"/Users/noahkasmanoff/Desktop/F21/jetcoin/src/jetcoin-src/13kfa275/checkpoints/epoch=0-step=47.ckpt"
 
 def predict(trader):
     """
