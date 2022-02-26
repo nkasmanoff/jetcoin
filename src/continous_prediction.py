@@ -21,7 +21,7 @@ import time
 from send_email import send_email
 
 
-model_path = "/Users/noahkasmanoff/Desktop/F21/jetcoin/src/jetcoin-src/37zvoms1/checkpoints/last.ckpt"
+model_path = "/home/noah/jetcoin/src/jetcoin-src/2t3e9glr/checkpoints/last.ckpt" #"/Users/noahkasmanoff/Desktop/F21/jetcoin/src/jetcoin-src/37zvoms1/checkpoints/last.ckpt"
 
 #"/home/noah/jetcoin/src/jetcoin-src/xz5rmmjw/checkpoints/epoch=66-step=3818.ckpt" #"/Users/noahkasmanoff/Desktop/F21/jetcoin/src/jetcoin-src/13kfa275/checkpoints/epoch=0-step=47.ckpt"
 
@@ -59,7 +59,7 @@ def predict(trader):
 
     cg = CoinGeckoAPI()
 
-    last_update = cg.get_price(ids=trader.hparams.args.crypto, vs_currencies=trader.hparams.args.values,include_last_updated_at=True)['bitcoin']
+    last_update = cg.get_price(ids=trader.hparams.args.crypto, vs_currencies=trader.hparams.args.values,include_last_updated_at=True)[trader.hparams.args.crypto]
 
     today = last_update['last_updated_at']
     current_price = last_update[trader.hparams.args.values]
@@ -133,7 +133,7 @@ def monitor():
 
         if np.datetime64(datetime.now()) > predicted_df['check_at'].values[-1]:
             # ready to log what the actual price was, and make another prediction.
-            current_price = cg.get_price(ids='bitcoin', vs_currencies='usd',include_last_updated_at=True)['bitcoin']['usd']
+            current_price = cg.get_price(ids=trader.hparams.args.crypto, vs_currencies='usd',include_last_updated_at=True)[trader.hparams.args.crypto]['usd']
             true_pct_change = (current_price - rolling_mean) / rolling_mean
             trader = update_model(trader, y_pred, true_pct_change)
 

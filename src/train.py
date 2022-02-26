@@ -5,7 +5,7 @@ Example usage:
 python train.py --auto_lr_find False --gpus 1 --prior_years 5 --prior_days 0 --crypto 'bitcoin' --window_size 28 --pct_window 7 --weight_decay 5e-5
 python train.py --auto_lr_find False --gpus 0 --prior_years 0 --prior_days 90 --crypto 'bitcoin' --window_size 24 --batch_size 32
 
-python train.py --auto_lr_find False --gpus 0 --prior_years 0 --prior_days 90 --crypto 'bitcoin' --window_size 24 --pct_window 24 --batch_size 8
+python train.py --auto_lr_find False --gpus 1 --prior_years 0 --prior_days 90 --crypto 'ethereum' --window_size 24 --pct_window 24 --batch_size 32 --weight_decay 5e-5
 
 """
 import pytorch_lightning as pl

@@ -51,7 +51,7 @@ class CryptoDataset(Dataset):
 
         return X_norm, torch.Tensor(y)
 
-def create_dataloaders(prior_years,prior_days,crypto,values,buy_thresh,window,batch_size,labels_to_load, pct_window):
+def create_dataloaders(prior_years,prior_days,crypto,values,buy_thresh,window,batch_size,labels_to_load, pct_window, weighted_sampling = False):
     """
     Runs full data loading and preparation pipeline to allow me to experiment with all aspects of
     the datasets as part of training.
@@ -76,7 +76,7 @@ def create_dataloaders(prior_years,prior_days,crypto,values,buy_thresh,window,ba
 
 
     params = [i['pct_change'] for i in coin_train]
-    num_bins = 50 # fixed for now. More bins = smaller space between -> more weight to outliers as they do not get binned with others.
+    num_bins = 3 # fixed for now. More bins = smaller space between -> more weight to outliers as they do not get binned with others. Have noticed that this exagerates the impact of high changes; should want to be more conservative, so reducing this to 3. 
     bin_sample_counts, bin_edges = get_bins(params, num_bins)
     bin_weights = 1./torch.Tensor(bin_sample_counts)
 
@@ -85,10 +85,14 @@ def create_dataloaders(prior_years,prior_days,crypto,values,buy_thresh,window,ba
     train_samples_weight = [bin_weights[bin_id] for bin_id in train_targets]
     train_samples_weight = np.array(train_samples_weight)
     train_sampler = torch.utils.data.sampler.WeightedRandomSampler(train_samples_weight, train_dataset.__len__())
-    train_loader = DataLoader(train_dataset, batch_size=batch_size,sampler=train_sampler,num_workers = 1) # sampler is mutually exclusive with shuffle
+    if weighted_sampling:
+        
+        train_loader = DataLoader(train_dataset, batch_size=batch_size,sampler=train_sampler,num_workers = 4) # sampler is mutually exclusive with shuffle
+    else:
+        train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True,num_workers = 4)
 
-    valid_loader = DataLoader(valid_dataset, batch_size=batch_size, shuffle=False,num_workers = 1)
-    test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False,num_workers = 1)
+    valid_loader = DataLoader(valid_dataset, batch_size=batch_size, shuffle=False,num_workers = 4)
+    test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False,num_workers = 4)
 
     today_loader = DataLoader(today_dataset, batch_size=1, shuffle=False)
 
